@@ -3,10 +3,10 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        checkout scmGit(branches: [[name: 'main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-credentials', url: 'https://github.com/Pavanks007/Movie-Bomb.git']])
+        checkout scmGit(branches: [[name: 'develop']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-credentials', url: 'https://github.com/Pavanks007/Movie-Bomb.git']])
      }
     }
-  }
+  
 
    stage('Build') {
       steps {
@@ -20,4 +20,5 @@ pipeline {
       }
     }
   
+}
 }
