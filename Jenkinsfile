@@ -1,31 +1,31 @@
 pipeline {
-  agent {
-    label 'slave1'
+  agent { label 'slave1' }
+
+  options {
+    timestamps()
   }
 
   stages {
     stage('Checkout') {
       steps {
-        checkout scmGit(
-          branches: [[name: "*/${env.BRANCH_NAME}"]],
-          userRemoteConfigs: [[
-            credentialsId: 'github-credentials',
-            url: 'https://github.com/Pavanks007/Movie-Bomb.git'
-          ]]
-        )
+        // Best practice for Multibranch: Jenkins already knows repo + branch
+        checkout scm
       }
     }
 
-    stage('Build') {
+    stage('Build & Test') {
       steps {
         sh 'mvn -v'
-        sh 'mvn clean package'
+        sh 'mvn -B clean test'
       }
       post {
-        success {
-          archiveArtifacts artifacts: 'target/*.war', fingerprint: true
+        always {
+          // Publish unit test results in Jenkins
+          junit 'target/surefire-reports/*.xml'
         }
       }
     }
+
+
   }
 }
