@@ -27,6 +27,9 @@ pipeline {
     }
     
 stage('Security Scan - OWASP Dependency Check') {
+   environment {
+    NVD_API_KEY = credentials('nvd-api-key')
+  }
   steps {
     dependencyCheck(
       odcInstallation: 'dependency-check',
