@@ -79,33 +79,55 @@ pipeline {
     SSH_CRED_ID    = "appserver-ssh-key"      // your Jenkins SSH credential ID
   }
 
-  steps {
-    sshagent(credentials: ["${SSH_CRED_ID}"]) {
-      sh '''
-        set -e
-        WAR_FILE=$(ls -1 target/*.war | head -n 1)
-        echo "Deploying: $WAR_FILE to ${TOMCAT_HOST}"
+    steps {
+      sshagent(credentials: ["${SSH_CRED_ID}"]) {
+        sh '''
+          set -e
+          WAR_FILE=$(ls -1 target/*.war | head -n 1)
+          echo "Deploying: $WAR_FILE to ${TOMCAT_HOST}"
 
-        # Stop Tomcat, clean previous deployment, then deploy new WAR
-        ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_HOST} "
-          sudo systemctl stop ${TOMCAT_SERVICE} || true
-          sudo rm -f ${TOMCAT_WEBAPPS}/ROOT.war
-          sudo rm -rf ${TOMCAT_WEBAPPS}/ROOT
-          sudo mkdir -p ${TOMCAT_WEBAPPS}
-        "
+          # Stop Tomcat, clean previous deployment, then deploy new WAR
+          ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_HOST} "
+            sudo systemctl stop ${TOMCAT_SERVICE} || true
+            sudo rm -f ${TOMCAT_WEBAPPS}/ROOT.war
+            sudo rm -rf ${TOMCAT_WEBAPPS}/ROOT
+            sudo mkdir -p ${TOMCAT_WEBAPPS}
+          "
 
-        scp -o StrictHostKeyChecking=no "$WAR_FILE" ${TOMCAT_USER}@${TOMCAT_HOST}:/tmp/ROOT.war
+          scp -o StrictHostKeyChecking=no "$WAR_FILE" ${TOMCAT_USER}@${TOMCAT_HOST}:/tmp/ROOT.war
 
-        ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_HOST} "
-          sudo mv /tmp/ROOT.war ${TOMCAT_WEBAPPS}/ROOT.war
-          sudo systemctl start ${TOMCAT_SERVICE}
-          sudo systemctl status ${TOMCAT_SERVICE} --no-pager
-        "
-      '''
+          ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_HOST} "
+            sudo mv /tmp/ROOT.war ${TOMCAT_WEBAPPS}/ROOT.war
+            sudo systemctl start ${TOMCAT_SERVICE}
+            sudo systemctl status ${TOMCAT_SERVICE} --no-pager
+          "
+        '''
+      }
     }
   }
 }
 
-    
-  }
+post {
+        success {
+            echo "🎉 SUCCESS on branch ${env.BRANCH_NAME}"
+            slackSend(
+                message: "✅ SUCCESS: Job ${env.JOB_NAME} #${env.BUILD_NUMBER} on branch ${env.BRANCH_NAME}"
+            )
+                mail(
+                    subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: "Build succeeded on branch ${env.BRANCH_NAME}",
+                    to: "pavanks.0077@gmail.com"
+                )
+
+        }
+        failure {
+            echo "❌ FAILED on branch ${env.BRANCH_NAME}"
+            mail(
+                    subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: "Build succeeded on branch ${env.BRANCH_NAME}",
+                    to: "pavanks.0077@gmail.com"
+                )
+        }
+}
+  
 }
