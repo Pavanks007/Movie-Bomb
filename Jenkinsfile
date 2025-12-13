@@ -26,21 +26,24 @@ pipeline {
       }
     }
     
-    stage('Security Scan - OWASP Dependency Check') {
-      steps {
-        dependencyCheck additionalArguments: '''
+stage('Security Scan - OWASP Dependency Check') {
+  steps {
+    dependencyCheck(
+      odcInstallation: 'dependency-check',
+      additionalArguments: '''
         --scan .
         --format HTML
+        --out dependency-check-report
         --disableAssembly
-      ''',
-      odcInstallation: 'dependency-check'
-      }
-      post {
-        always {
-        dependencyCheckPublisher pattern: '**/dependency-check-report.html'
-        }
-      }
+      '''
+    )
+  }
+  post {
+    always {
+      archiveArtifacts artifacts: 'dependency-check-report/**', fingerprint: true
     }
+  }
+}
 
   }
 }
