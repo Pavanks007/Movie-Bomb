@@ -57,5 +57,18 @@ pipeline {
         }
       }
     }
+
+  stage('Package') {
+  steps {
+    sh 'mvn -B clean package -DskipTests'
+  }
+  post {
+    success {
+      // WAR build (your project shows packaging = war)
+      archiveArtifacts artifacts: 'target/*.war', fingerprint: true
+    }
+  }
+}
+    
   }
 }
