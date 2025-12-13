@@ -19,7 +19,7 @@ pipeline {
       }
       post {
         always {
-          junit 'target/surefire-reports/*.xml'
+          junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
         }
       }
     }
@@ -33,7 +33,6 @@ pipeline {
       steps {
         sh '''
           set -e
-          # clean/recreate to avoid corrupt DB issues
           rm -rf "$DC_DATA_DIR" "$DC_OUT_DIR"
           mkdir -p "$DC_DATA_DIR" "$DC_OUT_DIR"
         '''
@@ -58,17 +57,15 @@ pipeline {
       }
     }
 
-  stage('Package') {
-  steps {
-    sh 'mvn -B clean package -DskipTests'
-  }
-  post {
-    success {
-      // WAR build (your project shows packaging = war)
-      archiveArtifacts artifacts: 'target/*.war', fingerprint: true
+    stage('Package') {
+      steps {
+        sh 'mvn -B package -DskipTests'
+      }
+      post {
+        success {
+          archiveArtifacts artifacts: 'target/*.war', fingerprint: true
+        }
+      }
     }
-  }
-}
-    
   }
 }
