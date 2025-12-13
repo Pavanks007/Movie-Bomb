@@ -25,7 +25,22 @@ pipeline {
         }
       }
     }
-
+    
+    stage('Security Scan - OWASP Dependency Check') {
+      steps {
+        dependencyCheck additionalArguments: '''
+        --scan .
+        --format HTML
+        --disableAssembly
+      ''',
+      odcInstallation: 'dependency-check'
+      }
+      post {
+        always {
+        dependencyCheckPublisher pattern: '**/dependency-check-report.html'
+        }
+      }
+    }
 
   }
 }
